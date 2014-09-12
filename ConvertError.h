@@ -1,0 +1,4 @@
+#ifndef CONVERTERROR_H
+#define CONVERTERROR_H
+
+#endif // CONVERTERROR_H

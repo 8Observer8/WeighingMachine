@@ -3,8 +3,9 @@
 
 #include <QByteArray>
 #include "IncorrectSize.h"
+#include "EmptyError.h"
 
 float getWeight( const QByteArray &package )
-throw( IncorrectSize );
+throw( IncorrectSize, EmptyError );
 
 #endif // FREEFUNCTIONS_H

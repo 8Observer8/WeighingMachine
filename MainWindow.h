@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QtSql>
+#include <QTimer>
 #include <QSqlTableModel>
 #include <QDateTime>
 #include "Receiver.h"
@@ -25,6 +26,7 @@ private slots:
     void slotReceiveData( const QByteArray &data );
     void slotSetSettings( const Receiver &receiver );
     void on_actionClear_triggered();
+    void slotTimeout();
 
 private:
     void submit();
@@ -40,6 +42,8 @@ private:
     bool m_lfOk;
     QByteArray m_package;
     const int m_sizeOfPackage;
+    QTimer m_timer;
+    bool m_isReadyToSend;
 };
 
 #endif // MAINWINDOW_H

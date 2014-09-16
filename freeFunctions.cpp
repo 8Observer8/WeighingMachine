@@ -3,18 +3,20 @@
 
 
 float getWeight( const QByteArray &package )
-throw( IncorrectSize )
+throw( IncorrectSize, EmptyError )
 {
+    std::string functionName = "getWeight()";
+
+    if ( package.size() == 0) {
+        throw EmptyError( functionName );
+    }
+
     if ( package.size() != 44 ) {
-        throw IncorrectSize();
+        throw IncorrectSize( functionName, package.size() );
     }
 
     // Get ASCII weightArray
-    QByteArray::fromHex( package.mid( 18, 12 ) ).toFloat();
+    float weight = QByteArray::fromHex( package.mid( 18, 14 ) ).toFloat();
 
-    //QString strByte = package[3];
-
-
-    float weight = 0.0f;
     return weight;
 }

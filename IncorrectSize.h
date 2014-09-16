@@ -3,33 +3,19 @@
 
 #include <stdexcept>
 #include "LogicError.h"
+#include "boost/lexical_cast.hpp"
 
 class IncorrectSize : public LogicError
 {
 public:
-    IncorrectSize( ) :
+    IncorrectSize( const std::string &functionName,
+                   int size ) :
         LogicError( )
     {
-        m_message = "Error: incorrect size";
+        std::string strSize = boost::lexical_cast<std::string>( size );
+        m_message = "Error: incorrect size = " + strSize + ". Function Name: "
+                "\"" + functionName + "\"";
     }
-
-    virtual ~IncorrectSize() throw()
-    {
-
-    }
-
-    virtual const char *what() const throw()
-    {
-        return m_message.c_str();
-    }
-
-    std::string message() const
-    {
-        return m_message;
-    }
-
-public:
-    std::string m_message;
 };
 
 #endif // INCORRECTSIZE_H

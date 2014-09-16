@@ -3,17 +3,23 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 #include "SettingsDialog.h"
+#include "freeFunctions.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     m_crOk( false ),
     m_lfOk( false ),
-    m_sizeOfPackage( 22 )
+    m_sizeOfPackage( 42 ),
+    m_isReadyToSend( false )
 {
     ui->setupUi(this);
 
     m_receiver = new Receiver;
+
+    connect( &m_timer, SIGNAL( timeout() ),
+             this, SLOT( slotTimeout() ) );
+    m_timer.start( 3000 );
 
     m_database = QSqlDatabase::addDatabase( "QSQLITE" );
     m_database.setDatabaseName( "Weighings.sqlite" );
@@ -24,15 +30,21 @@ MainWindow::MainWindow(QWidget *parent) :
                                   message );
     }
 
-//    QSqlQuery query( m_database );
-//    if ( !query.exec( "CREATE  TABLE \"main\".\"table\" (\"id\" INTEGER PRIMARY KEY  NOT NULL , \"name\" VARCHAR)" ) ) {
-//        QMessageBox::information( this, tr( "Error" ), tr( "Error: unable to create a table" ) );
-//    }
+    //    QSqlQuery query( m_database );
+    //    if ( !query.exec( "CREATE  TABLE \"main\".\"table\" (\"id\" INTEGER PRIMARY KEY  NOT NULL , \"name\" VARCHAR)" ) ) {
+    //        QMessageBox::information( this, tr( "Error" ), tr( "Error: unable to create a table" ) );
+    //    }
 
     m_model = new QSqlTableModel( this, m_database );
     m_model->setEditStrategy( QSqlTableModel::OnManualSubmit );
     m_model->setTable( "WeighingTable" );
+
     m_model->select();
+
+    //    QSqlQuery query( m_database );
+    //    if ( !query.exec( "CREATE  TABLE \"main\".\"WeighingTable\" (\"id\" INTEGER PRIMARY KEY  NOT NULL , \"date\" VARCHAR, \"weight\" DOUBLE )" ) ) {
+    //        QMessageBox::information( this, tr( "Error" ), tr( "Error: unable to create a table" ) );
+    //    }
 
     m_model->database().transaction();
 
@@ -85,46 +97,40 @@ void MainWindow::slotSetSettings( const Receiver &receiver )
 
 void MainWindow::slotReceiveData( const QByteArray &data )
 {
-    QString str( data );
-
-    // CR
-    if ( ( str == "0D" ) || ( str == "0d" ) ) {
-        m_crOk = true;
+    if ( !m_isReadyToSend ) {
         return;
     }
 
-    // LF
-    if ( ( str == "0A" ) || ( str == "0a" ) ) {
-        m_lfOk = true;
-        return;
-    }
+    QString strByte( data );
+    QString strEnd = "0A";
 
-    // CR LF
-    if ( m_crOk && m_lfOk ) {
-        if ( m_package.size() == m_sizeOfPackage ) {
-            // Save
-            //float weight = getWeight( m_package );
-            //setDataToTable( QDateTime::currentDateTime(), weight );
-            m_package.clear();
-        } else if ( m_package.size() < m_sizeOfPackage ) {
-            m_package.append( str );
-        } else {
-            m_package.clear();
+    // Save package
+    if ( ( strByte == strEnd ) && ( m_package.size() == m_sizeOfPackage ) ) {
+        m_package.append( strByte );
+        float weight = 0.0f;
+        try {
+            weight = getWeight( m_package );
+        } catch ( const LogicError &e ) {
+            return;
         }
 
-        m_crOk = false;
-        m_lfOk = false;
+        if ( weight > 100.0f ) {
+            setDataToTable( QDateTime::currentDateTime(), weight );
+            m_isReadyToSend = false;
+            m_timer.start( 3000 );
+        }
+        m_package.clear();
+        return;
+    } if ( strByte == strEnd ) {
+        m_package.clear();
+    } else if ( m_package.size() >= m_sizeOfPackage ) {
+        m_package.clear();
+        return;
+    } else {
+        if ( strByte != strEnd ) {
+            m_package.append( strByte );
+        }
     }
-
-
-//    QStringList listOfBytes;
-
-//    qDebug() << data[0];
-//    qDebug() << data[1];
-//    qDebug() << "";
-//    if ( data.size() == 1 ) {
-//        qDebug() << data.at( 0 );
-//    }
 }
 
 void MainWindow::on_actionClear_triggered()
@@ -134,15 +140,21 @@ void MainWindow::on_actionClear_triggered()
     submit();
 }
 
+void MainWindow::slotTimeout()
+{
+    m_isReadyToSend = true;
+    m_timer.stop();
+}
+
 void MainWindow::submit()
 {
     if( m_model->submitAll() ) {
         m_model->database().commit();
     } else {
         m_model->database().rollback();
-//        qDebug() << "Database Write Error" <<
-//                    "The database reported an error: " <<
-//                    m_model->lastError().text();
+        //        qDebug() << "Database Write Error" <<
+        //                    "The database reported an error: " <<
+        //                    m_model->lastError().text();
 
     }
 }

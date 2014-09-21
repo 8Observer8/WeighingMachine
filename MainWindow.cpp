@@ -1,5 +1,5 @@
 
-#include <QMessageBox.h>
+#include <QMessageBox>
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 #include "SettingsDialog.h"
@@ -16,6 +16,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     m_receiver = new Receiver;
+
+    m_statusLabel = new QLabel;
+    ui->statusBar->addPermanentWidget( m_statusLabel, 1 );
 
     connect( &m_timer, SIGNAL( timeout() ),
              this, SLOT( slotTimeout() ) );
@@ -48,8 +51,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_model->database().transaction();
 
-    ui->tableView->setModel( m_model );
-    ui->tableView->hideColumn( 0 );
+//    ui->tableView->setModel( m_model );
+//    ui->tableView->hideColumn( 0 );
+//    ui->tableView->setColumnWidth( 1, 200 );
     m_model->setHeaderData( 1, Qt::Horizontal, tr( "Дата и время" ) );
     m_model->setHeaderData( 2, Qt::Horizontal, tr( "Вес" ) );
 }
@@ -84,6 +88,10 @@ void MainWindow::slotSetSettings( const Receiver &receiver )
         m_receiver->run();
         connect( m_receiver, SIGNAL( signalReceivedData( QByteArray ) ),
                  this, SLOT( slotReceiveData( QByteArray ) ) );
+        QString portName = m_receiver->getPortName();
+        QString baudRate = QString::number( static_cast<int>( m_receiver->getBaudRate() ) );
+        QString statusText = QString( "%1, BaudRate = %2" ).arg( portName ).arg( baudRate );
+        m_statusLabel->setText( statusText );
     } catch ( const PortError &e ) {
         QString message( e.what() );
         QMessageBox::information( this, tr( "Error" ), message );
@@ -116,6 +124,7 @@ void MainWindow::slotReceiveData( const QByteArray &data )
 
         if ( weight > 100.0f ) {
             setDataToTable( QDateTime::currentDateTime(), weight );
+            ui->weightLineEdit->setText( QString::number( weight ) );
             m_isReadyToSend = false;
             m_timer.start( 3000 );
         }

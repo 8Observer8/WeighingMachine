@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>303</width>
-    <height>500</height>
+    <width>335</width>
+    <height>111</height>
    </rect>
   </property>
   <property name="font">
@@ -20,9 +20,20 @@
    <string>Весы</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="QTableView" name="tableView"/>
+     <widget class="QLabel" name="weightLabel">
+      <property name="text">
+       <string>Текущий вес (кг):</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="weightLineEdit">
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -31,7 +42,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>303</width>
+     <width>335</width>
      <height>21</height>
     </rect>
    </property>

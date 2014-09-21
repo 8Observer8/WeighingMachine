@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <QSqlTableModel>
 #include <QDateTime>
+#include <QLabel>
 #include "Receiver.h"
 
 namespace Ui {
@@ -44,6 +45,7 @@ private:
     const int m_sizeOfPackage;
     QTimer m_timer;
     bool m_isReadyToSend;
+    QLabel *m_statusLabel;
 };
 
 #endif // MAINWINDOW_H
